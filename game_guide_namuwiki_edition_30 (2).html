@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GG 로그 - 나무위키 에디션 (30+ Games)</title>
+    <style>
+        :root {
+            --bg-color: #1b2838;
+            --card-bg: #2a475e;
+            --text-color: #c7d5e0;
+            --primary-color: #66c0f4;
+            --wiki-link: #3b88c3;
+            --border-color: #171a21;
+            --modal-overlay: rgba(0,0,0,0.85);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; overflow-x: hidden; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background-color: #171a21; border-bottom: 2px solid var(--primary-color); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 24px; font-weight: 900; color: #ffffff; cursor: pointer; }
+        .logo span { color: var(--primary-color); }
+        .search-container input { padding: 12px 20px; border-radius: 4px; border: none; background-color: #316282; color: #ffffff; font-size: 15px; width: 400px; outline: none; transition: background-color 0.3s; }
+        .search-container input:focus { background-color: #3d7a9f; }
+        main { max-width: 1400px; margin: 0 auto; padding: 40px 20px; display: flex; gap: 30px; }
+        .sidebar { width: 220px; flex-shrink: 0; }
+        .category-list { list-style: none; }
+        .category-list li { padding: 10px; margin-bottom: 5px; cursor: pointer; border-radius: 4px; font-size: 15px; font-weight: bold; background: rgba(0,0,0,0.2); }
+        .category-list li:hover, .category-list li.active { background-color: var(--primary-color); color: #fff; }
+        .content { flex-grow: 1; }
+        .game-list { display: flex; flex-direction: column; gap: 20px; }
+        .game-card { background-color: var(--border-color); border: 1px solid #316282; display: flex; height: 160px; cursor: pointer; border-radius: 8px; overflow: hidden; }
+        .game-card:hover { transform: translateY(-3px); border-color: var(--primary-color); }
+        .game-thumb { width: 300px; background-size: cover; background-position: center; }
+        .game-info { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .game-info h3 { font-size: 24px; color: #fff; margin-bottom: 10px; }
+        .game-desc { font-size: 14px; color: #8f98a0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .game-tags { margin-top: 10px; }
+        .game-tag { padding: 4px 10px; font-size: 12px; background: #2a475e; color: #66c0f4; border-radius: 12px; margin-right: 5px; font-weight: bold;}
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--modal-overlay); justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .modal-content { background-color: #ffffff; color: #222; border-radius: 8px; max-width: 1100px; width: 100%; height: 90vh; position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        .modal-header { background-color: #f8f9fa; border-bottom: 1px solid #ccc; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 32px; color: #000; font-weight: 900; }
+        .close-btn { font-size: 30px; cursor: pointer; color: #555; }
+        .wiki-body { padding: 30px; overflow-y: auto; flex-grow: 1; font-size: 15px; line-height: 1.8; }
+        .wiki-info-box { float: right; width: 300px; border: 1px solid #ccc; background: #f9f9f9; margin: 0 0 20px 20px; padding: 10px; border-radius: 4px; }
+        .wiki-img { width: 100%; height: auto; border-radius: 4px; margin-bottom: 10px; }
+        .wiki-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .wiki-table th, .wiki-table td { border: 1px solid #ddd; padding: 8px; }
+        .wiki-table th { background-color: #e9ecef; text-align: left; }
+        .wiki-toc { border: 1px solid #a2a9b1; background-color: #f8f9fa; padding: 15px 25px; display: inline-block; margin-bottom: 30px; border-radius: 4px; }
+        .wiki-toc a { color: var(--wiki-link); text-decoration: none; font-weight: bold; }
+        .wiki-section { margin-bottom: 40px; clear: both; }
+        .wiki-section h3 { font-size: 24px; color: #000; border-bottom: 2px solid #a2a9b1; margin-bottom: 15px; padding-top: 20px; }
+        .wiki-section p { margin-bottom: 15px; word-break: keep-all; }
+        .highlight { background-color: #fff3cd; font-weight: bold; padding: 0 4px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="displayGames('all')">GG <span>WIKI (30 Games)</span></div>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="문서 검색...">
+        </div>
+    </header>
+    <main>
+        <aside class="sidebar">
+            <ul class="category-list">
+                <li class="filter-btn active" data-category="all">분류:전체 게임</li>
+                <li class="filter-btn" data-category="rpg">분류:RPG</li>
+                <li class="filter-btn" data-category="openworld">분류:오픈월드</li>
+                <li class="filter-btn" data-category="action">분류:액션</li>
+                <li class="filter-btn" data-category="sim">분류:시뮬레이션</li>
+                <li class="filter-btn" data-category="strategy">분류:전략</li>
+                <li class="filter-btn" data-category="indie">분류:인디</li>
+                <li class="filter-btn" data-category="puzzle">분류:퍼즐</li>
+            </ul>
+        </aside>
+        <section class="content">
+            <div class="game-list" id="game-grid"></div>
+        </section>
+    </main>
+
+    <div class="modal" id="game-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="m-title">게임 제목</h2>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="wiki-body" id="wiki-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameData = [{"title": "엘든 링", "category": "rpg", "img": "https://upload.wikimedia.org/wikipedia/en/b/b9/Elden_Ring_Box_art.jpg", "dev": "프롬 소프트웨어", "year": "2022", "desc": "방대한 틈새의 땅을 무대로 펼쳐지는 다크 판타지 액션 RPG의 걸작.", "overview": "프롬 소프트웨어와 조지 R.R. 마틴이 협력하여 제작한 다크 판타지 액션 RPG입니다. 방대한 '틈새의 땅'을 무대로 빛바랜 자의 여정을 다룹니다. 기존 프롬 게임들의 선형적인 구조를 탈피하고, 진정한 의미의 오픈월드 탐험 요소와 소울라이크 특유의 매운맛 난이도를 결합했습니다. 2022년 최다 GOTY를 수상하며 상업적, 비평적 성공을 거두었습니다.", "story": "황금 나무의 축복을 상징하는 '엘든 링'이 파쇄되면서 파쇄전쟁이 일어납니다. 과거 틈새의 땅 밖으로 쫓겨났던 '빛바랜 자'들이 다시 축복의 부름을 받습니다. 플레이어는 틈새의 땅으로 돌아와, 흩어진 위대한 룬을 모으고 엘데의 왕이 되기 위한 거대한 모험을 시작합니다.", "tips": "초반에는 남쪽의 <span class='highlight'>흐느끼는 반도</span>를 먼저 탐험하며 스펙을 올리세요. '뼛가루' 시스템을 활용하면 난이도가 급감합니다. 마법사 태생은 원거리 요격이 가능해 초보자에게 추천됩니다. 모그윈 왕조 절벽에서 효율적인 룬 노가다가 가능합니다."}, {"title": "더 위쳐 3: 와일드 헌트", "category": "rpg", "img": "https://upload.wikimedia.org/wikipedia/en/0/0c/Witcher_3_cover_art.jpg", "dev": "CD PROJEKT RED", "year": "2015", "desc": "서양 RPG의 교과서이자 내러티브의 정점을 보여주는 게임.", "overview": "안제이 사프콥스키의 소설을 원작으로 한 3인칭 오픈월드 액션 RPG입니다. 2015년 최다 GOTY를 수상하며 서양식 RPG의 마스터피스로 불립니다. 압도적인 분량, 깊이 있는 서브 퀘스트, 살아 숨 쉬는 대륙 묘사가 특징입니다.", "story": "위쳐 '게롤트'가 옛 연인 예니퍼의 행방을 쫓으며 시작됩니다. 이후 수양딸 '시리'를 쫓는 이계의 군대 '와일드 헌트'를 막기 위해 대륙을 횡단합니다. 플레이어의 선택에 따라 수많은 인물들의 운명이 결정됩니다.", "tips": "전투 시 <span class='highlight'>'쿠엔' 표식</span>을 사용해 방어막을 생성하세요. '제비 포션'을 우선적으로 업그레이드하고 몬스터 약점에 맞는 기름을 사용하세요. 낙사 판정이 엄격하니 주의하고, 미니게임 '궨트'도 꼭 즐겨보세요."}, {"title": "젤다의 전설 브레스 오브 더 와일드", "category": "openworld", "img": "https://upload.wikimedia.org/wikipedia/en/c/c6/The_Legend_of_Zelda_Breath_of_the_Wild.jpg", "dev": "닌텐도", "year": "2017", "desc": "오픈월드 게임의 패러다임을 바꾼 닌텐도의 전설적인 마스터피스.", "overview": "젤다의 전설 시리즈 18번째 작품으로, 완벽에 가까운 환경 상호작용과 물리 엔진을 자랑합니다. 눈에 보이는 모든 곳을 탐험할 수 있는 압도적인 자유도를 선사하며, 오픈월드의 역사를 새로 썼다는 극찬을 받았습니다.", "story": "100년 전 재앙 가논의 부활로 멸망한 하이랄 왕국. 100년 뒤 기억을 잃고 깨어난 링크가 미지의 목소리에 이끌려 하이랄을 탐험하며 힘을 되찾고, 젤다 공주를 구하러 가는 이야기입니다.", "tips": "초반에는 <span class='highlight'>스태미나 그릇</span>을 먼저 늘리는 것이 탐험에 유리합니다. 이름에 '맥스'가 붙은 재료를 단독으로 요리하면 체력이 완전 회복됩니다. 비가 올 때는 절벽 등반을 피하고 사당을 클리어하세요."}, {"title": "사이버펑크 2077", "category": "openworld", "img": "https://upload.wikimedia.org/wikipedia/en/9/9f/Cyberpunk_2077_box_art.jpg", "dev": "CD PROJEKT RED", "year": "2020", "desc": "미래 도시 나이트 시티에서 전설이 되기 위한 V의 처절한 사투.", "overview": "1인칭 오픈월드 액션 RPG로, 지속적인 패치와 확장팩 '팬텀 리버티'를 통해 평가를 뒤집은 수작입니다. 사이버펑크 장르 특유의 어두운 디스토피아 분위기를 완벽하게 구현했습니다.", "story": "나이트 시티의 용병 'V'는 특수 칩을 머리에 꽂게 되고, 전설적인 테러리스트 '조니 실버핸드'의 인격과 융합되며 시한부 선고를 받습니다. 살기 위해 발버둥 치는 V의 이야기입니다.", "tips": "다리에 <span class='highlight'>'이단 점프'</span> 사이버웨어를 달아 탐험의 질을 높이세요. '넷러너' 빌드를 타면 안전한 암살이 가능합니다. 에임이 어렵다면 '스마트 무기'를 적극 사용하세요."}, {"title": "세키로: 섀도우 다이 트와이스", "category": "action", "img": "https://upload.wikimedia.org/wikipedia/en/6/6e/Sekiro_art.jpg", "dev": "프롬 소프트웨어", "year": "2019", "desc": "오직 검과 검이 부딪히는 '패링'에 집중한 극한의 닌자 액션.", "overview": "소울라이크를 탈피하고 '검극(패링)'에 시스템을 집중시킨 닌자 액션 게임입니다. 2019년 GOTY를 수상했으며, 동체시력과 리듬감을 극한으로 시험하는 난이도를 자랑합니다.", "story": "멸망 위기의 아시나국을 배경으로, 황자를 모시는 닌자 '늑대'의 이야기입니다. 팔이 잘린 늑대는 '닌자 의수'를 달고 주군을 되찾기 위한 피비린내 나는 복수극을 시작합니다.", "tips": "적의 공격을 <span class='highlight'>'튕겨내기(패링)'</span> 하여 체간을 쌓는 것이 핵심입니다. '간파하기' 스킬을 최우선으로 배우고, 위급할 때는 닌자 의수 '폭죽'을 사용하세요."}, {"title": "몬스터 헌터: 월드", "category": "action", "img": "https://upload.wikimedia.org/wikipedia/en/1/1f/Monster_Hunter_World_cover_art.jpg", "dev": "캡콤", "year": "2018", "desc": "웅장한 생태계 속에서 거대 몬스터를 사냥하는 수렵 액션의 정점.", "overview": "몬스터 헌터 시리즈를 메가 히트작으로 끌어올린 게임입니다. 차세대 기기의 성능을 활용해 웅장한 생태계를 구현했으며, 멀티플레이 협동 사냥의 재미가 극대화되었습니다.", "story": "고룡들이 신대륙으로 향하는 '고룡 이동'을 조사하기 위해 신대륙 조사단에 합류한 헌터의 이야기입니다. 신대륙의 거대한 몬스터들을 사냥하며 자연의 섭리를 밝혀냅니다.", "tips": "레벨업 대신 <span class='highlight'>'손가락 숙련도'</span>가 중요합니다. 사냥 전 식당에서 체력을 늘리고, 몬스터가 도망갈 때는 '포획'을 노리세요. 클러치 클로를 이용한 '벽꿍' 기술을 적극 활용하세요."}, {"title": "스타듀 밸리", "category": "sim", "img": "https://upload.wikimedia.org/wikipedia/en/f/f8/Stardew_Valley.jpg", "dev": "ConcernedApe", "year": "2016", "desc": "농사, 채광, 낚시, 연애까지! 귀농의 로망을 이뤄주는 궁극의 힐링 게임.", "overview": "1인 인디 게임 개발자가 4년에 걸쳐 제작한 농장 경영 시뮬레이션입니다. 농사뿐만 아니라 채광, 낚시, 마을 주민과의 교류 등 무궁무진한 콘텐츠를 자랑하는 대표적인 힐링 게임입니다.", "story": "도시 생활에 지친 주인공이 할아버지가 남긴 낡은 농장을 물려받아 펠리컨 마을로 향합니다. 잡초와 돌을 치우며 새로운 인생과 인연을 만들어갑니다.", "tips": "초반에는 파스닙과 감자로 자금을 마련하세요. 비가 오는 날에는 광산이나 낚시를 가고, 마을 회관의 <span class='highlight'>꾸러미(번들)</span>를 최우선 목표로 플레이하여 시스템을 익히세요."}, {"title": "마인크래프트", "category": "sim", "img": "https://upload.wikimedia.org/wikipedia/en/5/51/Minecraft_cover.png", "dev": "모장 스튜디오", "year": "2011", "desc": "네모난 블록으로 무한한 상상력을 펼치는 샌드박스 장르의 독보적 1위.", "overview": "비디오 게임 역사상 가장 많이 팔린 샌드박스 장르의 전설입니다. 모든 것이 네모난 블록으로 이루어진 무한한 세계에서 채집, 건축, 서바이벌을 자유롭게 즐길 수 있습니다.", "story": "공식적인 스토리는 없으며, 몬스터들을 피해 피난처를 짓고 살아남아야 합니다. 이후 지옥과 끝 차원에 도달하여 '엔더 드래곤'을 토벌하는 것이 암묵적인 목표입니다.", "tips": "첫날에는 반드시 나무를 캐고 양을 잡아 <span class='highlight'>침대</span>를 만들어 밤을 스킵하세요. 깊은 지하에서 '가지 채굴' 기법을 사용해 다이아몬드를 찾고, 낙하 대미지를 무효화하는 '물 양동이'를 항상 챙기세요."}, {"title": "스타크래프트 리마스터", "category": "strategy", "img": "https://upload.wikimedia.org/wikipedia/en/0/07/StarCraft_Remastered_box_art.jpg", "dev": "블리자드", "year": "2017", "desc": "대한민국 e스포츠의 상징이자 RTS 게임의 불멸의 고전.", "overview": "1998년 출시되어 e스포츠 산업을 탄생시킨 전설적인 RTS 게임입니다. 테란, 저그, 프로토스 세 종족 간의 완벽한 밸런스와 상성, 그리고 속도감 있는 전개가 특징입니다.", "story": "코프룰루 구역을 무대로 세 종족의 얽히고설킨 서사시가 펼쳐집니다. 짐 레이너, 사라 케리건, 제라툴 등 입체적이고 매력적인 영웅들의 비극적인 서사가 캠페인의 압권입니다.", "tips": "가장 중요한 기본은 <span class='highlight'>'자원 채취'와 '병력 생산'</span>을 쉬지 않고 반복하는 매크로 능력입니다. 단축키와 부대 지정을 외우고, 미니맵을 3초에 한 번씩 확인하는 습관을 들이세요."}, {"title": "할로우 나이트", "category": "indie", "img": "https://upload.wikimedia.org/wikipedia/en/0/04/Hollow_Knight_first_cover_art.webp", "dev": "팀 체리", "year": "2017", "desc": "아름답고도 잔혹한 곤충 왕국을 탐험하는 메트로배니아의 정수.", "overview": "메트로배니아 장르의 완벽한 교과서로 불리는 2D 액션 어드벤처 게임입니다. 몽환적인 곤충 세계를 수려한 2D 핸드 드로잉으로 그려냈으며, 미로 같은 지하 맵 탐험의 재미가 타의 추종을 불허합니다.", "story": "알 수 없는 감염병이 퍼져 미쳐버린 곤충들의 왕국 '신성둥지'. 과묵한 '기사'가 폐허가 된 왕국의 깊은 지하로 뛰어들어 감염의 근원을 파괴하기 위한 숙명적인 여정을 걷습니다.", "tips": "새로운 지역에서는 지도 제작자 '코니퍼'를 가장 먼저 찾으세요. 보스전에서는 도망만 치기보다 <span class='highlight'>과감하게 평타 공격</span>을 섞어 영혼을 수급하고, 포고(하단 베기) 테크닉을 완벽히 익히세요."}, {"title": "발더스 게이트 3", "category": "rpg", "img": "https://upload.wikimedia.org/wikipedia/en/1/12/Baldur%27s_Gate_3_cover_art.jpg", "dev": "라리안 스튜디오", "year": "2023", "desc": "D&D 룰을 완벽하게 구현하여 진정한 롤플레잉의 재미를 선사하는 CRPG의 마스터피스.", "overview": "던전 앤 드래곤 5판의 룰을 비디오 게임으로 가장 완벽하게 옮겨냈다는 평가를 받는 작품입니다. 방대한 텍스트, 압도적인 상호작용, 플레이어의 모든 선택이 결과로 이어지는 놀라운 내러티브를 제공합니다. 2023년 각종 시상식에서 GOTY를 싹쓸이하며 CRPG 장르의 부흥을 이끌었습니다.", "story": "마인드 플레이어의 함선에 납치되어 뇌 속에 '올챙이'가 심어진 주인공과 동료들의 이야기입니다. 이들은 괴물로 변이하는 것을 막기 위해 페이룬 대륙을 모험하며, 그 과정에서 신들과 세력들의 거대한 권력 암투와 음모에 휘말리게 됩니다.", "tips": "전투는 턴제로 진행되므로, 지형지물을 활용하는 것이 필수적입니다. 고지대에서 원거리 공격을 하거나 적을 <span class='highlight'>밀치기</span>로 낭떠러지에 떨어뜨려 즉사시킬 수 있습니다. 대화 선택지가 게임 전체에 큰 영향을 미치므로 주기적으로 빠른 저장(F5)을 생활화하세요."}, {"title": "레드 데드 리뎀션 2", "category": "openworld", "img": "https://upload.wikimedia.org/wikipedia/en/4/44/Red_Dead_Redemption_II.jpg", "dev": "락스타 게임즈", "year": "2018", "desc": "서부 개척 시대의 황혼기를 살아가는 무법자의 처절하고 아름다운 서사시.", "overview": "GTA 시리즈로 유명한 락스타 게임즈가 제작한 오픈월드 액션 어드벤처 게임입니다. 역대 최고 수준의 상호작용과 그래픽, 그리고 느린 호흡의 장인 정신이 깃든 디테일을 보여줍니다. 게임을 넘어선 하나의 거대한 서부 영화를 체험하는 듯한 몰입감을 자랑합니다.", "story": "1899년 미국, 서부 개척 시대가 끝나가는 시점을 배경으로 합니다. 플레이어는 무법자 갱단 '반 더 린드 갱'의 핵심 멤버인 아서 모건이 되어, 법 집행관들과 현상금 사냥꾼들에게 쫓기며 시대의 변화 속에서 살아남기 위해 고군분투합니다.", "tips": "빠른 이동 시스템이 제한적이므로, 말과의 유대감을 높여 넓은 맵을 유유자적하게 탐험하는 느긋한 마음가짐이 필요합니다. 전투 시 <span class='highlight'>'데드 아이'</span> 스킬을 켜서 시간을 느리게 만든 후 적들의 머리에 마커를 찍어 순식간에 제압하는 것이 전투의 핵심입니다."}, {"title": "GTA 5", "category": "openworld", "img": "https://upload.wikimedia.org/wikipedia/en/a/a5/Grand_Theft_Auto_V.png", "dev": "락스타 게임즈", "year": "2013", "desc": "역대 가장 많이 팔린 게임 중 하나이자, 범죄 오픈월드 액션의 절대 강자.", "overview": "가상의 도시 로스 산토스를 무대로 세 명의 주인공이 얽히고설키며 벌어지는 범죄 드라마를 그립니다. 스토리 모드뿐만 아니라 'GTA 온라인'의 엄청난 성공으로 발매 후 10년이 지난 지금까지도 현역으로 플레이되는 전설적인 타이틀입니다.", "story": "은퇴한 은행 강도 마이클, 야심 찬 갱스터 프랭클린, 그리고 통제 불능의 사이코패스 트레버. 전혀 다른 삶을 살던 세 사람이 한 사건을 계기로 모여 미국 정부 기관과 거대 범죄 조직을 상대로 위험천만한 대형 휴대전(Heist)을 벌이는 이야기입니다.", "tips": "주인공이 3명이므로 상황에 맞게 <span class='highlight'>캐릭터를 스위칭</span>하며 플레이해야 합니다. 스토리 임무 중 주식 시장을 조작하는 미션(레스터의 암살 퀘스트)을 할 때는 미션 수행 직전과 직후에 특정 주식을 매매하여 수십억 달러의 돈을 복사할 수 있습니다."}, {"title": "엘더스크롤 5: 스카이림", "category": "rpg", "img": "https://upload.wikimedia.org/wikipedia/en/1/15/The_Elder_Scrolls_V_Skyrim_cover.png", "dev": "베데스다 게임 스튜디오", "year": "2011", "desc": "모드(Mod) 생태계를 통해 영원한 생명력을 얻은 서양 판타지 오픈월드의 바이블.", "overview": "베데스다가 개발한 엘더스크롤 시리즈의 5번째 작품으로, 2011년 수많은 상을 휩쓴 명작입니다. 방대하고 디테일한 판타지 세계관, 수천 개의 던전과 퀘스트, 그리고 유저들이 직접 만드는 '모드(Mod)'를 통해 무한한 확장성을 가진 게임으로 평가받습니다.", "story": "스카이림 지역에 고대의 드래곤 알두인이 부활하면서 세계의 멸망이 다가옵니다. 플레이어는 드래곤의 영혼을 흡수하고 '용언'을 사용할 수 있는 선택받은 영웅 '도바킨(드래곤본)'이 되어 알두인을 쓰러뜨리고 스카이림을 구해야 합니다.", "tips": "초반 진행 시 닭이나 소 등 <span class='highlight'>마을의 가축을 실수로라도 때리면 안 됩니다.</span> 마을 전체가 적대적으로 변해 초반 생존이 불가능해집니다. 은신 기술을 올린 뒤 활을 쏘는 '은신 궁수' 빌드가 가장 강력하고 안전하여 스카이림의 국룰 빌드로 통합니다."}, {"title": "하데스", "category": "indie", "img": "https://upload.wikimedia.org/wikipedia/en/c/cc/Hades_cover_art.jpg", "dev": "슈퍼자이언트 게임즈", "year": "2020", "desc": "로그라이크의 반복 플레이에 탄탄한 스토리와 액션을 부여한 웰메이드 인디 게임.", "overview": "그리스 로마 신화를 바탕으로 한 쿼터뷰 액션 로그라이크 게임입니다. 죽을 때마다 처음으로 돌아가지만, 그 과정에서 캐릭터들의 대화가 변하고 스토리가 전개되는 독특한 시스템으로 호평을 받았습니다. 뛰어난 아트와 타격감이 일품입니다.", "story": "지하세계의 신 하데스의 아들인 '자그레우스'가 아버지가 지배하는 가출하여 지상 세계로 향하려는 이야기입니다. 올림푸스 신들은 자그레우스에게 은혜(버프)를 내려주며 그의 가출을 돕고, 그는 지하세계의 층을 오르며 강력한 수문장들을 돌파해야 합니다.", "tips": "죽는 것을 두려워하지 마세요. 죽을 때마다 모은 어둠(재화)으로 밤의 거울에서 <span class='highlight'>영구적인 스탯 업그레이드</span>가 가능합니다. '돌진(대시)'에 무적 판정이 있으므로, 적의 공격을 피할 때는 무조건 대시를 연속해서 사용하는 것이 생존의 핵심입니다."}, {"title": "젤다의 전설 티어스 오브 더 킹덤", "category": "openworld", "img": "https://upload.wikimedia.org/wikipedia/en/f/f7/The_Legend_of_Zelda_Tears_of_the_Kingdom_cover.jpg", "dev": "닌텐도", "year": "2023", "desc": "하늘과 지저를 넘나드는 탐험, 무한한 창의력을 발휘하는 '조나우 기어'의 마법.", "overview": "브레스 오브 더 와일드의 정식 후속작으로, 맵의 무대를 하늘섬과 거대한 지하 세계(지저)까지 확장했습니다. 특히 물체를 붙이고 조립하는 '울트라핸드' 능력을 통해 게이머들이 직접 기계와 로봇을 만들어내는 상상 초월의 샌드박스 플레이를 제공합니다.", "story": "전작에서 가논을 물리친 후, 지하를 조사하던 링크와 젤다는 미라 상태의 마왕 가논돌프를 깨우고 맙니다. 젤다는 과거의 시간으로 사라지고 링크는 오른팔이 썩어가는 부상을 입습니다. 신비한 라울의 오른팔을 이식받은 링크는 다시 한번 젤다를 찾고 마왕을 토벌하기 위해 떠납니다.", "tips": "<span class='highlight'>'울트라핸드'</span> 능력으로 물건을 조립할 때, 조나우 기어인 선풍기와 조종간을 결합한 '호버 바이크'를 만들면 하늘과 땅을 자유롭게 날아다닐 수 있어 탐험 난이도가 급감합니다. 어두운 지저를 탐험할 때는 '조명꽃 씨앗'을 활에 매달아 쏘아 주변을 밝혀야 합니다."}, {"title": "슈퍼 마리오 오디세이", "category": "action", "img": "https://upload.wikimedia.org/wikipedia/en/8/8d/Super_Mario_Odyssey.jpg", "dev": "닌텐도", "year": "2017", "desc": "마리오 3D 플랫폼 게임의 집대성, 모자와 함께하는 환상적인 세계 여행.", "overview": "닌텐도 스위치로 발매된 3D 마리오 시리즈로, 전 세계의 다양한 국가(왕국)를 여행하며 파워문을 모으는 샌드박스 탐험 게임입니다. 맵 구석구석에 숨겨진 기믹과 눈을 즐겁게 하는 다채로운 레벨 디자인으로 액션 게임의 마스터피스로 불립니다.", "story": "언제나 그렇듯 피치 공주를 납치해 억지로 결혼식을 올리려는 쿠파를 막기 위해 마리오가 나섭니다. 이번에는 쿠파에게 모자 왕국이 공격당해 여동생을 납치당한 모자 유령 '캐피'와 파트너가 되어, 비행선 오디세이호를 타고 전 세계를 추격합니다.", "tips": "캐피(모자)를 적이나 사물에 던져 씌우면 그것을 조종할 수 있는 <span class='highlight'>'캡처'</span> 능력이 가장 중요합니다. 개구리를 캡처해 높이 점프하거나 공룡(티렉스)을 캡처해 바위를 부수는 등 상황에 맞는 변신을 활용하세요. 구석구석 의심스러운 곳을 엉덩이 찍기로 찍어보면 파워문이 숨겨져 있습니다."}, {"title": "포탈 2", "category": "puzzle", "img": "https://upload.wikimedia.org/wikipedia/en/f/f9/Portal2cover.jpg", "dev": "밸브 코퍼레이션", "year": "2011", "desc": "퍼즐 게임의 영원한 금자탑. 공간을 비틀어 해답을 찾고 진실을 마주하라.", "overview": "포탈건을 이용해 벽에 두 개의 구멍을 뚫어 공간을 이어붙이는 독창적인 메커니즘의 퍼즐 게임입니다. 천재적인 레벨 디자인뿐만 아니라 GLaDOS, 휘틀리 등 매력적인 캐릭터들이 이끌어가는 블랙 코미디와 반전 스토리가 극찬을 받았습니다.", "story": "전작에서 인공지능 GLaDOS를 파괴하고 동면 상태에 빠졌던 주인공 '첼'. 수백 년이 지나 붕괴되어가는 애퍼처 사이언스 연구소에서 깨어난 그녀는 수다쟁이 로봇 휘틀리와 함께 시설을 탈출하려 하지만, 실수로 GLaDOS를 다시 깨우며 또다시 치명적인 테스트에 갇히게 됩니다.", "tips": "포탈에 들어갈 때의 속도가 나올 때 그대로 유지된다는 <span class='highlight'>운동량 보존의 법칙</span>을 활용하는 것이 중후반 퍼즐의 핵심입니다. 높은 곳에서 뛰어내리며 바닥에 포탈을 쏘고, 벽에 쏜 포탈로 튀어나와 닿을 수 없는 곳까지 날아가는 기술을 숙달해야 합니다."}, {"title": "모여봐요 동물의 숲", "category": "sim", "img": "https://upload.wikimedia.org/wikipedia/en/1/1f/Animal_Crossing_New_Horizons.jpg", "dev": "닌텐도", "year": "2020", "desc": "코로나 팬데믹 시대, 전 세계인들에게 따뜻한 휴식처가 되어준 최고의 무인도 힐링 라이프.", "overview": "동물의 숲 시리즈의 닌텐도 스위치 버전으로, 무인도 이주 패키지에 참가하여 섬을 발전시키고 개성 넘치는 동물 이웃들과 소통하는 커뮤니케이션 게임입니다. 리얼타임(실제 시간)과 연동되어 매일매일 조금씩 섬이 발전하는 소소한 기쁨을 줍니다.", "story": "거대한 기업 너굴 모터스의 대표 너굴이 기획한 '무인도 이주 패키지 플랜'에 참가한 플레이어. 텐트 하나만 달랑 쳐진 척박한 무인도에서 시작하여, 과일을 따고 곤충을 잡으며 돈(벨)을 모아 집을 짓고, 다리를 놓고, 섬의 자연을 자유롭게 디자인하며 최고의 파라다이스를 만듭니다.", "tips": "초반 대출금을 갚기 위해서는 해변을 돌아다니며 조개를 줍고 낚시를 하는 것이 가장 무난합니다. 매일 바위를 치면 철광석을 얻을 수 있는데, <span class='highlight'>바위를 치기 전 뒤에 구멍을 파서 넉백을 방지</span>하면 한 바위에서 최대 8개의 아이템을 연속으로 캘 수 있습니다. 무 주식은 대박을 노릴 수 있지만 일주일이 지나면 썩으니 주의하세요."}, {"title": "배틀그라운드", "category": "action", "img": "https://upload.wikimedia.org/wikipedia/en/c/ce/PlayerUnknown%27s_Battlegrounds_Steam_Logo.jpg", "dev": "크래프톤", "year": "2017", "desc": "배틀로얄 장르의 세계적인 흥행을 이끈 국산 슈팅 게임의 자존심.", "overview": "최대 100명의 플레이어가 무기와 탈것이 흩어진 방대한 맵에 낙하하여, 점차 좁혀지는 자기장(블루존) 속에서 최후의 1인(또는 팀)이 될 때까지 살아남는 배틀로얄 게임입니다. 극한의 긴장감과 '오늘 저녁은 치킨이닭!'이라는 밈으로 전 세계적인 신드롬을 일으켰습니다.", "story": "스토리 중심의 게임은 아니지만, 배경 설정상 가상의 러시아 섬 에란겔, 사막 미라마 등 다양한 전장에서 생존을 건 데스매치가 벌어집니다. 각 맵은 과거 군사 기지, 반군 세력 등의 암울한 디스토피아적 설정을 담고 있습니다.", "tips": "총을 쏘는 피지컬보다 <span class='highlight'>'자기장 관리'와 '자리(포지셔닝)'</span>가 생존 확률을 압도적으로 높여줍니다. 초보자는 너무 사람이 붐비는 대도시보다 외곽의 작은 집들을 파밍하며 후반을 도모하는 것이 좋습니다. 사운드 플레이가 절대적이므로 이어폰이나 헤드셋을 반드시 착용하고 발소리를 집중해서 들으세요."}, {"title": "리그 오브 레전드", "category": "action", "img": "https://upload.wikimedia.org/wikipedia/en/7/77/League_of_Legends_logo.png", "dev": "라이엇 게임즈", "year": "2009", "desc": "전 세계 PC방 점유율 부동의 1위, MOBA 장르의 제왕.", "overview": "5명의 플레이어가 한 팀이 되어 탑, 미드, 바텀, 정글의 포지션을 나누어 적의 기지(넥서스)를 파괴하는 MOBA(AOS) 게임입니다. 160개 이상의 개성 있는 챔피언들과 e스포츠 리그(롤드컵)의 엄청난 규모로 10년이 넘는 세월 동안 세계 최고의 인기를 누리고 있습니다.", "story": "과거 룬테라 대륙의 각 국가(데마시아, 녹서스 등) 간의 전쟁을 스포츠 형태로 해결하기 위해 '전쟁 학회'가 설립되었다는 초기 설정이 있었으나, 현재는 각 챔피언들의 고유한 배경과 룬테라 세계관 자체의 방대한 서사(아케인 등)로 개편되어 깊이를 더하고 있습니다.", "tips": "가장 중요한 기본기는 적 미니언의 막타만 쳐서 골드를 획득하는 <span class='highlight'>'CS 먹기'</span>입니다. 아무리 킬을 많이 내도 CS를 놓치면 아이템 차이가 벌어집니다. 맵의 어두운 곳(안개)을 밝히는 '와드'를 쿨타임마다 박아 적 정글러의 갱킹(기습)을 방지하는 것이 팀 승리의 척도입니다. 멘탈 관리가 제일 중요하니, 채팅은 끄고( /mute all ) 게임하는 것을 권장합니다."}, {"title": "발로란트", "category": "action", "img": "https://upload.wikimedia.org/wikipedia/en/8/87/Valorant_logo.png", "dev": "라이엇 게임즈", "year": "2020", "desc": "정통 전술 FPS에 캐릭터 스킬을 결합하여 긴장감을 극대화한 경쟁 슈터.", "overview": "라이엇 게임즈가 개발한 5v5 전술 슈팅 게임입니다. 카운터 스트라이크 시리즈의 정통적인 교전 방식(브레이킹, 정교한 에임)을 기반으로 하면서도, 각 요원(캐릭터)이 가진 고유의 스킬을 활용하여 변수를 창출하는 것이 특징입니다. 현재 글로벌 10대~20대 사이에서 선풍적인 인기를 끌고 있습니다.", "story": "가까운 미래, 지구에 '레디어나이트'라는 신비한 물질이 나타나면서 초능력을 얻은 요원들이 등장합니다. 이 물질을 둘러싸고 평행 우주의 또 다른 지구와 자원을 차지하기 위한 비밀 요원 조직 '발로란트 프로토콜'의 전투를 다룹니다.", "tips": "무빙을 하면서 총을 쏘면 총알이 사방으로 튀기 때문에, 적을 만나면 반드시 키보드에서 손을 떼고 멈춘 상태에서 쏘는 <span class='highlight'>'브레이킹'</span> 기술이 필수입니다. 크로스헤어(조준점)를 항상 적의 머리 높이에 두는 '헤드라인' 유지를 습관화해야 0.1초의 교전에서 승리할 수 있습니다."}, {"title": "테라리아", "category": "indie", "img": "https://upload.wikimedia.org/wikipedia/en/3/30/Terraria_logo.jpg", "dev": "Re-Logic", "year": "2011", "desc": "2D 마인크래프트? 아니, 파고들수록 끝이 없는 하드코어 액션 어드벤처.", "overview": "샌드박스 장르로 시작하지만, 진행할수록 수많은 보스 토벌과 장비 파밍이 중심이 되는 2D 액션 RPG의 성격을 강하게 띕니다. 무기, 장신구, 마법, 소환수 등 방대한 아이템 풀을 통해 수십 가지의 빌드를 짜는 재미가 엄청나 스팀 압도적 긍정적 평가를 자랑합니다.", "story": "뚜렷한 서사 텍스트는 없지만, 플레이어는 낯선 대지에 떨어져 살아남으며 서서히 오염되어가는 세계(크림슨/커럽션)를 정화하고, 지하 깊은 곳의 지옥에서 고대의 보스를 물리친 후 닥쳐오는 '하드모드'의 우주적 위협(달의 군주)을 이겨내야 합니다.", "tips": "보스를 상대하기 전에는 반드시 나무 플랫폼을 여러 층으로 깔아 <span class='highlight'>'아레나(전투 경기장)'</span>를 건축하고, 모닥불과 하트 랜턴을 설치해 체력 재생 버프를 받아야 합니다. 지하를 탐험할 때는 갈고리(훅)를 최우선으로 만들어 기동성을 확보하면 낙사 방지와 회피에 큰 도움이 됩니다."}, {"title": "다크 소울 3", "category": "rpg", "img": "https://upload.wikimedia.org/wikipedia/en/c/c5/Dark_Souls_III_cover.jpg", "dev": "프롬 소프트웨어", "year": "2016", "desc": "불이 꺼져가는 세계에서 펼쳐지는 소울 시리즈의 완벽한 피날레.", "overview": "프롬 소프트웨어의 간판 타이틀인 다크 소울 시리즈의 마지막 작품입니다. 전작들에 비해 스피디해진 전투 액션, 직관적인 레벨 디자인, 그리고 압도적인 브금(BGM)과 연출을 자랑하는 수많은 명품 보스전으로 소울라이크의 표준을 완성한 명작입니다.", "story": "태초의 불꽃이 점차 사그라들며 세상이 멸망의 위기에 처합니다. 불꽃을 계승해야 할 '장작의 왕'들은 옥좌를 버리고 도망쳐버렸고, 무덤에서 깨어난 이름 없는 '재의 귀인'이 이 도망친 왕들을 쓰러뜨리고 그들의 재를 옥좌에 되돌려놓기 위해 절망적인 여정을 떠납니다.", "tips": "적의 콤보 공격이 끝날 때까지 침착하게 방패로 막거나 구르기로 피한 뒤, 틈을 보일 때 딱 1~2대만 때리고 다시 빠지는 <span class='highlight'>'히트 앤 런'</span>이 닼소 시리즈의 정석입니다. 기사 태생으로 시작하여 주어지는 롱소드를 강화하고 100% 물리 컷 방패를 들면 엔딩까지 무난하게 프리패스가 가능합니다."}, {"title": "블러드본", "category": "rpg", "img": "https://upload.wikimedia.org/wikipedia/en/e/eb/Bloodborne_cover_art.jpg", "dev": "프롬 소프트웨어", "year": "2015", "desc": "야수들이 우글거리는 고딕 호러 도시, 방패를 버리고 피보라 속으로 뛰어들어라.", "overview": "빅토리아 시대의 고딕 양식과 코즈믹 호러(크툴루 신화)를 결합한 독보적인 분위기를 자랑하는 액션 RPG입니다. 다크 소울의 방어적인 플레이를 억제하고, 피할 수 없다면 적을 찢어 체력을 흡수하는 매우 공격적이고 속도감 있는 전투 시스템으로 찬사를 받았습니다.", "story": "풍토병인 '야수병'이 만연하여 저주받은 도시 '야남'. 주인공은 병을 치료하기 위해 야남을 찾았다가 미스터리한 수혈을 받고 사냥꾼(헌터)이 됩니다. 사냥꾼은 야수들을 썰어 넘기며 야남에 숨겨진 위대한 자들(우주적 존재)의 끔찍한 진실과 피의 기원을 파헤치게 됩니다.", "tips": "방패가 사실상 존재하지 않으므로, 적에게 맞았을 때 뒤로 도망치지 말고 오히려 <span class='highlight'>적을 즉시 공격하여 잃은 체력을 복구(리게인 시스템)</span>하는 짐승 같은 공격성이 요구됩니다. 적의 공격 타이밍에 맞춰 총을 쏴 패링(내장 뽑기)을 성공시키는 것이 대형 보스전의 클리어 열쇠입니다."}, {"title": "갓 오브 워", "category": "action", "img": "https://upload.wikimedia.org/wikipedia/en/a/a7/God_of_War_4_cover.jpg", "dev": "산타모니카 스튜디오", "year": "2018", "desc": "분노를 가라앉힌 스파르타의 유령, 북유럽 신화에서 아버지로서 다시 태어나다.", "overview": "과거 그리스 신들을 몰살시켰던 분노의 화신 크레토스가 북유럽 신화로 배경을 옮겨 아들 아트레우스와 함께 모험하는 액션 어드벤처입니다. 숄더뷰 시점으로의 변경과 게임 내내 컷신이 끊기지 않는 '원테이크' 연출을 통해 엄청난 몰입감을 선사하며 2018년 GOTY를 수상했습니다.", "story": "크레토스는 아내 페이가 죽은 후, '세상에서 가장 높은 산의 정상에 유해를 뿌려달라'는 그녀의 마지막 유언을 지키기 위해 어린 아들 아트레우스와 긴 여정을 떠납니다. 그 과정에서 발두르 등 북유럽의 신들이 이 부자를 위협해오고, 크레토스는 자신의 과거를 숨긴 채 아들에게 진정한 전사가 되는 법을 가르칩니다.", "tips": "주무기인 <span class='highlight'>리바이어던 도끼</span>를 던지고 다시 회수하는 손맛이 일품입니다. 적을 얼리거나 퍼즐을 푸는 데 도끼 투척을 적극 활용하세요. 아들 아트레우스의 활쏘기(네모 버튼)는 단순한 보조가 아니라 적의 패턴을 끊고 스턴 수치를 쌓는 핵심적인 공격이므로 쿨타임마다 눌러줘야 합니다."}, {"title": "더 라스트 오브 어스", "category": "action", "img": "https://upload.wikimedia.org/wikipedia/en/4/46/Video_Game_Cover_-_The_Last_of_Us.jpg", "dev": "너티 독", "year": "2013", "desc": "비디오 게임 스토리텔링을 예술의 경지로 끌어올린 포스트 아포칼립스 명작.", "overview": "동충하초 곰팡이 감염으로 인해 인류가 멸망한 지 20년 후의 세계를 다루는 스토리 주도형 생존 액션 어드벤처 게임입니다. 몰입감 넘치는 연출, 처절한 생존 전투, 그리고 조엘과 엘리라는 두 주인공 사이의 깊고 복잡한 유대감 묘사로 비평가들의 찬사를 받았습니다.", "story": "밀수꾼 조엘은 우연히 감염에 면역력을 가진 14세 소녀 엘리를 반군 조직인 '파이어플라이'의 기지까지 무사히 데려가야 하는 의뢰를 맡습니다. 좀비(감염자)보다 더 잔혹한 약탈자 인간들이 판치는 절망적인 미국 대륙을 횡단하며, 차가웠던 두 사람은 점차 서로를 가족처럼 여기게 됩니다.", "tips": "탄약과 자원이 항상 부족하므로 적진 한가운데로 돌진하는 람보 플레이는 불가능합니다. 빈 병이나 벽돌을 던져 적의 시선을 끈 뒤, 뒤로 돌아가서 <span class='highlight'>칼로 암살(은신 테이크다운)</span>하는 쫄깃한 플레이가 기본입니다. 특히 청각이 예민한 '클리커' 앞에서는 웅크린 채 아날로그 스틱을 반만 밀어 소리 없이 걸어야 합니다."}, {"title": "페르소나 5 더 로열", "category": "rpg", "img": "https://upload.wikimedia.org/wikipedia/en/b/b0/Persona_5_Royal.jpg", "dev": "아틀러스", "year": "2019", "desc": "스타일리시한 괴도들의 반역 극, 최고의 JRPG 턴제 전투와 일상 파트의 조화.", "overview": "낮에는 평범한 고등학생으로 학교생활과 커뮤니티(인연)를 쌓고, 밤에는 '마음의 괴도단'이 되어 악인들의 왜곡된 욕망이 빚어낸 정신 세계(팰리스)에 잠입해 보물을 훔치는 독특한 구성의 JRPG입니다. 감각적인 UI와 애시드 재즈 풍의 세련된 OST가 돋보입니다.", "story": "억울한 누명을 쓰고 도쿄로 전학 온 주인공 '조커'는 스마트폰에 깔린 정체불명의 앱을 통해 이세계로 들어갈 수 있게 됩니다. 그는 부패한 교사, 사기꾼 예술가, 악덕 정치인 등의 마음을 훔쳐 개심시키기 위해, 상처받은 동료들을 모아 괴도단을 결성하고 사회의 어둠에 맞서 싸웁니다.", "tips": "적의 약점 속성(화염, 빙결 등)을 찔러 넘어뜨리면 <span class='highlight'>'1 MORE(한 번 더 행동)'</span> 기회를 얻습니다. 모든 적을 넘어뜨리면 파티 전원이 발동하는 총공격을 가할 수 있으므로 약점 찌르기가 전투의 기본입니다. 일상 파트에서는 캐릭터의 능력치(매력, 지식 등)를 꾸준히 올려야 후반부 코프(호감도) 랭크를 맥스로 찍을 수 있습니다."}, {"title": "바이오하자드 RE:4", "category": "action", "img": "https://upload.wikimedia.org/wikipedia/en/5/5c/Resident_Evil_4_Remake_Cover_Art.jpg", "dev": "캡콤", "year": "2023", "desc": "서바이벌 호러 액션의 바이블 바하4, 최신 그래픽으로 완벽하게 부활하다.", "overview": "2005년에 출시되어 숄더뷰 시점을 확립하며 게임 역사에 큰 획을 그은 원작 바하4를 캡콤이 최신 RE 엔진으로 완벽하게 리메이크한 작품입니다. 낡은 조작감은 현대적으로 세련되게 다듬고, 특유의 B급 호러 감성과 미친듯한 액션의 템포는 그대로 살려내어 '리메이크의 교과서'라는 극찬을 받았습니다.", "story": "라쿤 시티 참사 이후 6년, 대통령 직속 특수 요원으로 성장한 주인공 '레온 S. 케네디'는 납치된 대통령의 딸 애슐리를 구출하라는 임무를 띠고 유럽의 외딴 시골 마을로 향합니다. 하지만 그곳은 기생 생물 '플라가'에 조종당하는 광기 어린 사이비 종교 교단이 지배하고 있었습니다.", "tips": "총알을 아끼기 위해 적의 머리나 다리를 쏴서 경직을 먹인 후, 다가가서 <span class='highlight'>체술(발차기)</span>로 날려버리는 콤보가 생존의 기본이자 핵심 재미입니다. 리메이크에서 새로 생긴 '단검 패링'은 톱을 든 강력한 적의 공격도 튕겨낼 수 있으니 타이밍을 연습해 단검 내구도를 잘 관리하세요."}, {"title": "디아블로 2: 레저렉션", "category": "rpg", "img": "https://upload.wikimedia.org/wikipedia/en/b/b8/Diablo_II_Resurrected_cover.jpg", "dev": "블리자드", "year": "2021", "desc": "핵앤슬래시 장르의 기틀을 다진 영원한 악마 사냥, 4K 해상도로 지옥문이 다시 열리다.", "overview": "2000년대 PC방을 지배했던 디아블로 2의 그래픽과 해상도를 현대적으로 완벽하게 일신한 리마스터 버전입니다. 다크 판타지 특유의 으스스한 분위기와 타격감, 그리고 룬워드와 아이템 파밍이라는 중독성 강한 원작의 뼈대를 그대로 보존해 올드 팬들의 향수를 저격했습니다.", "story": "전작에서 디아블로를 쓰러뜨리고 스스로의 몸에 악마의 영혼석을 꽂아 봉인했던 영웅 '아이단'은 결국 타락하여 '어둠의 방랑자'가 됩니다. 플레이어는 이 방랑자의 발자취를 쫓으며 트리스트럼을 지나, 메피스토, 디아블로, 바알로 이어지는 대악마 형제들의 세계 멸망 음모를 막아야 합니다.", "tips": "초반 진행 시 룬워드 아이템인 <span class='highlight'>'스텔스(잠행)'와 '학식'</span>을 맞추는 것을 최우선 목표로 하세요. 백작(카운테스)을 반복해서 잡아 룬을 파밍하면 됩니다. 스탯은 아이템을 낄 수 있을 만큼의 힘과 민첩만 찍고, 나머지는 전부 '활력(체력)'에 올인하는 것이 디아2의 불문율입니다."}, {"title": "팰월드", "category": "openworld", "img": "https://upload.wikimedia.org/wikipedia/en/b/b3/Palworld_Cover.jpg", "dev": "포켓페어", "year": "2024", "desc": "총을 든 포켓몬? 상상만 했던 기괴하고도 매력적인 생존 크래프팅의 돌풍.", "overview": "신비한 생명체 '팰(Pal)'들을 포획해 전투에 내보내는 것은 물론, 기지에 배치해 벌목, 채굴, 무기 제작 등의 가혹한 강제 노동을 시키거나 총을 쥐여주는 등 파격적이고 유쾌한(때로는 잔혹한) 시스템으로 2024년 초 전 세계 스팀 동접자 200만 명을 돌파하며 초대박을 친 생존 오픈월드 게임입니다.", "story": "플레이어는 정체불명의 기기가 쥐어진 채 팰들이 서식하는 미지의 섬 '팰파고스'에 표류하게 됩니다. 이곳에서 거점을 짓고 팰들을 길들여 다양한 지역의 밀렵단 보스들과 강력한 전설의 팰들을 토벌하며 섬의 비밀을 파헤치는 생존 개척기입니다.", "tips": "초반에는 귀여운 팰들의 노동력을 착취(?)하여 나무와 돌을 캐는 자동화 거점을 빠르게 구축하는 것이 핵심입니다. <span class='highlight'>탈것으로 쓸 수 있는 비행 팰(나이트윙 등)</span>을 최우선으로 포획하면 절벽과 바다를 건널 수 있어 탐험 반경이 비약적으로 넓어집니다. 팰의 속성 상성(물, 불, 풀 등)이 대미지에 2배 이상 차이를 주므로 보스전 전에는 약점 속성 팰을 챙겨가세요."}];
+
+        const gameGrid = document.getElementById('game-grid');
+        const modal = document.getElementById('game-modal');
+        const searchInput = document.getElementById('search-input');
+        let currentFilter = 'all';
+
+        function displayGames(filter = currentFilter, searchQuery = "") {
+            gameGrid.innerHTML = "";
+            currentFilter = filter;
+            
+            let filtered = filter === "all" ? gameData : gameData.filter(g => g.category === filter);
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase().trim();
+                filtered = filtered.filter(g => g.title.toLowerCase().includes(q) || g.dev.toLowerCase().includes(q));
+            }
+
+            filtered.forEach(game => {
+                const card = document.createElement('div');
+                card.classList.add('game-card');
+                card.innerHTML = `
+                    <div class="game-thumb" style="background-image: url('${game.img}')"></div>
+                    <div class="game-info">
+                        <h3>${game.title}</h3>
+                        <p class="game-desc">${game.desc}</p>
+                        <div class="game-tags">
+                            <span class="game-tag">개발: ${game.dev}</span>
+                            <span class="game-tag">출시: ${game.year}년</span>
+                        </div>
+                    </div>
+                `;
+                card.addEventListener('click', () => openWikiModal(game));
+                gameGrid.appendChild(card);
+            });
+        }
+
+        function openWikiModal(game) {
+            document.getElementById('m-title').textContent = game.title;
+            const wikiHTML = `
+                <div class="wiki-info-box">
+                    <img src="${game.img}" class="wiki-img">
+                    <table class="wiki-table">
+                        <tr><th>개발사</th><td>${game.dev}</td></tr>
+                        <tr><th>출시 연도</th><td>${game.year}년</td></tr>
+                        <tr><th>장르</th><td>${game.category.toUpperCase()}</td></tr>
+                    </table>
+                </div>
+                <div class="wiki-toc">
+                    <b>목차</b><ul>
+                        <li><a href="#sec-1">1. 개요</a></li>
+                        <li><a href="#sec-2">2. 스토리 및 배경</a></li>
+                        <li><a href="#sec-3">3. 꿀팁 및 핵심 공략</a></li>
+                    </ul>
+                </div>
+                <div class="wiki-section" id="sec-1"><h3>1. 개요</h3><p>${game.overview}</p></div>
+                <div class="wiki-section" id="sec-2"><h3>2. 스토리 및 배경</h3><p>${game.story}</p></div>
+                <div class="wiki-section" id="sec-3"><h3>3. 꿀팁 및 핵심 공략</h3><p>${game.tips}</p></div>
+                <div style="clear:both;"></div>
+            `;
+            document.getElementById('wiki-body').innerHTML = wikiHTML;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            document.getElementById('wiki-body').scrollTop = 0;
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            displayGames('all', e.target.value);
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if(!e.target.value) document.querySelector('[data-category="all"]').classList.add('active');
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                searchInput.value = "";
+                displayGames(e.target.dataset.category);
+            });
+        });
+
+        document.querySelector('.close-btn').onclick = () => { modal.style.display = 'none'; document.body.style.overflow = 'auto'; };
+        window.onclick = (e) => { if(e.target === modal) { modal.style.display = 'none'; document.body.style.overflow = 'auto'; } };
+
+        document.getElementById('wiki-body').addEventListener('click', function(e) {
+            if(e.target.tagName === 'A' && e.target.getAttribute('href').startsWith('#')) {
+                e.preventDefault();
+                const t = document.getElementById(e.target.getAttribute('href').substring(1));
+                if(t) this.scrollTo({ top: t.offsetTop - 20, behavior: 'smooth' });
+            }
+        });
+
+        displayGames();
+    </script>
+</body>
+</html>
